@@ -8,3 +8,5 @@ type User struct {
 	Password string
 	Role     string
 }
+
+//No existe ningún import. Eso hace que el modelo sea independiente.
