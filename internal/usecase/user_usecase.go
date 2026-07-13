@@ -6,6 +6,11 @@ import (
 	"go-patron/internal/repository"
 )
 
+type UserUseCaseInterface interface {
+	Create(user *entity.User) error
+	FindByID(id uint) (*entity.User, error)
+}
+
 type UserUseCase struct {
 	repo repository.UserRepository
 }
