@@ -15,13 +15,7 @@ type UserUseCase struct {
 	repo repository.UserRepository
 }
 
-// Constructor
-func NewUserUseCase(repo repository.UserRepository) *UserUseCase {
-	return &UserUseCase{
-		repo: repo,
-	}
-}
-
+// Observa que el Use Case no sabe si usamos GORM, PostgreSQL o MongoDB.
 func (u *UserUseCase) Create(user *entity.User) error {
 
 	if user.Name == "" {
@@ -38,4 +32,9 @@ func (u *UserUseCase) FindByID(id uint) (*entity.User, error) {
 	return u.repo.FindByID(id)
 }
 
-//Observa que el Use Case no sabe si usamos GORM, PostgreSQL o MongoDB.
+// Constructor
+func NewUserUseCase(repo repository.UserRepository) *UserUseCase {
+	return &UserUseCase{
+		repo: repo,
+	}
+}
