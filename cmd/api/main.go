@@ -3,13 +3,10 @@ package main
 import (
 	"fmt"
 	"go-patron/internal/handler"
-	"go-patron/internal/repository"
 	"go-patron/internal/usecase"
-	"log"
+	"go-patron/mock"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 const dsn = "host=localhost user=postgres password=gigpz dbname=bd_tests port=5434 sslmode=disable"
@@ -18,17 +15,18 @@ func main() {
 	fmt.Println("Hello, World! Clean Architecture in Go")
 
 	// 1. Inicializar la conexión a la base de datos
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("No se pudo conectar a la base de datos: %v", err)
-	}
+	// db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// if err != nil {
+	// 	log.Fatalf("No se pudo conectar a la base de datos: %v", err)
+	// }
 	r := gin.Default()
 	// 2. Inyección de Dependencias (Tu código)
 	// Pasamos 'db' al repositorio
-	repo := repository.NewUserRepository(db)
+	//repo := repository.NewUserRepository(db)
+	repo := mock.MockRepository{}
 
 	// Pasamos 'repo' al caso de uso
-	userUseCase := usecase.NewUserUseCase(repo)
+	userUseCase := usecase.NewUserUseCase(&repo)
 
 	// Pasamos 'userUseCase' al manejador
 	handler := handler.NewUserHandler(userUseCase)
@@ -38,6 +36,10 @@ func main() {
 
 	r.GET("/user/:id", func(c *gin.Context) {
 		handler.FindByID(c)
+	})
+
+	r.POST("/user", func(c *gin.Context) {
+		handler.Create(c)
 	})
 
 	r.Run(":8080")

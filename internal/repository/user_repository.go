@@ -25,6 +25,7 @@ type UserRepository interface {
 	) error
 }
 
+// Estructura: Es la implementación concreta de la interfaz.
 type userRepository struct {
 	db *gorm.DB
 }
@@ -56,3 +57,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 		db: db,
 	}
 }
+
+//Devuelve un puntero de la estructura privada (&userRepository),
+//pero tipado como la interfaz pública. Esto oculta los detalles de
+// la implementación.
