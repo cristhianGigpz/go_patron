@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"go-patron/internal/entity"
+	"go-patron/internal/dto"
 	"go-patron/internal/usecase"
 	"net/http"
 	"strconv"
@@ -22,23 +22,24 @@ func NewUserHandler(usecase usecase.UserUseCaseInterface) *UserHandler {
 
 // Método
 func (h *UserHandler) Create(c *gin.Context) {
+	var req dto.CreateUserRequest
+	//var user entity.User
+	//c.BindJSON(&user)
 
-	var user entity.User
-
-	c.BindJSON(&user)
-
-	err := h.usecase.Create(&user)
-
-	if err != nil {
-
-		c.JSON(400, gin.H{
-			"error": err.Error(),
-		})
-
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(201, user)
+	// Enviamos el DTO al caso de uso y recibimos el DTO de respuesta seguro
+	res, err := h.usecase.Create(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Retorna un 201 con los datos limpios (sin password)
+	c.JSON(http.StatusCreated, res)
 }
 
 func (h *UserHandler) FindByID(c *gin.Context) {
@@ -57,16 +58,17 @@ func (h *UserHandler) FindByID(c *gin.Context) {
 	// 3. Castear a uint de forma segura
 	userID := uint(idInt)
 
-	user, err := h.usecase.FindByID(userID)
-
+	userDTO, err := h.usecase.FindByID(userID)
 	if err != nil {
-		c.JSON(404, gin.H{
+		// Aquí puedes mapear errores específicos de GORM (como registro no encontrado) a un 404
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(200, user)
+	// Retorna el DTO sin campos ocultos o contraseñas
+	c.JSON(http.StatusOK, userDTO)
 }
 
 //El Handler solo recibe datos y responde. Toda la lógica está en el Use Case.
