@@ -12,7 +12,7 @@ import (
 // Server ahora tiene la dependencia del Caso de Uso inyectada
 type Server struct {
 	proto.UnimplementedUserServiceServer
-	usecase *usecase.UserUseCase
+	usecase usecase.UserUseCaseInterface
 }
 
 // NewUserGRPCServer es el constructor que inyecta la dependencia
