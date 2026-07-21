@@ -4,6 +4,8 @@ import (
 	"context"
 	"go-patron/internal/usecase"
 	"go-patron/proto" // Reemplaza por tu módulo real de go.mod
+	"log"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,4 +49,52 @@ func (s *Server) GetUser(ctx context.Context, req *proto.UserRequest) (*proto.Us
 		Name:  userDTO.Name,
 		Email: userDTO.Email,
 	}, nil
+}
+
+func (s *Server) GetUsers(req *proto.Empty, stream proto.UserService_GetUsersServer) error {
+	log.Println("Cliente conectado solicitando streaming de usuarios...")
+
+	// 1. Simulación o llamada al caso de uso para obtener un listado de usuarios.
+	// En un entorno real, u.usecase.FindAll() traería esto de la base de datos.
+	usuariosSimulados := []struct {
+		ID    uint
+		Name  string
+		Email string
+	}{
+		{ID: 1, Name: "Juan Carlos", Email: "juan@gmail.com"},
+		{ID: 2, Name: "Maria Belen", Email: "maria@gmail.com"},
+		{ID: 3, Name: "Pedro Pascal", Email: "pedro@gmail.com"},
+	}
+
+	// 2. Iterar sobre la lista y enviar cada usuario uno por uno a través del stream
+	for _, u := range usuariosSimulados {
+
+		// Comprobar si el cliente canceló la petición antes de enviar el siguiente dato
+		if err := stream.Context().Err(); err != nil {
+			log.Println("El cliente canceló la conexión del stream")
+			return status.Error(codes.Canceled, "Conexión cancelada por el cliente")
+		}
+
+		// Construir el mensaje de respuesta de Protobuf
+		res := &proto.UserResponse{
+			Id:    int32(u.ID),
+			Name:  u.Name,
+			Email: u.Email,
+		}
+
+		// Enviar el mensaje al canal (stream)
+		if err := stream.Send(res); err != nil {
+			log.Printf("Error al enviar usuario ID %d por el stream: %v", u.ID, err)
+			return status.Error(codes.Internal, "Fallo al transmitir datos")
+		}
+
+		log.Printf("Usuario %s enviado con éxito", u.Name)
+
+		// Agregamos un pequeño delay artificial para notar el efecto de "streaming" en tiempo real
+		time.Sleep(1 * time.Second)
+	}
+
+	// 3. Retornar 'nil' le indica a gRPC que el servidor terminó de enviar todos los datos con éxito
+	log.Println("Streaming de usuarios finalizado correctamente")
+	return nil
 }

@@ -2,14 +2,11 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
-	"net/http"
-	"strconv"
-	"time"
 
 	"go-patron/proto" // Reemplaza "go-patron" por el nombre de tu módulo en go.mod
 
-	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -52,44 +49,77 @@ func main() {
 	// userHandler := handler.NewUserWebHandlerRpc(client)
 
 	// // 4. Configurar el servidor HTTP con Gin
-	r := gin.Default()
+	// r := gin.Default()
 
-	r.GET("/user/:id", func(c *gin.Context) {
-		idStr := c.Param("id")
-		idInt, err := strconv.Atoi(idStr)
-		if err != nil || idInt <= 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "El ID debe ser un número entero positivo"})
-			return
+	// r.GET("/user/:id", func(c *gin.Context) {
+	// 	idStr := c.Param("id")
+	// 	idInt, err := strconv.Atoi(idStr)
+	// 	if err != nil || idInt <= 0 {
+	// 		c.JSON(http.StatusBadRequest, gin.H{"error": "El ID debe ser un número entero positivo"})
+	// 		return
+	// 	}
+
+	// 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	// 	defer cancel()
+
+	// 	grpcReq := &proto.UserRequest{
+	// 		Id: int32(idInt), // Convertimos al tipo de dato que espera tu proto
+	// 	}
+
+	// 	// 4. Realizar la llamada interna por gRPC al microservicio
+	// 	grpcRes, err := client.GetUser(ctx, grpcReq)
+	// 	if err != nil {
+	// 		c.JSON(http.StatusInternalServerError, gin.H{
+	// 			"error":   "No se pudo obtener el usuario desde el servicio interno",
+	// 			"details": err.Error(),
+	// 		})
+	// 		return
+	// 	}
+
+	// 	// 5. Responder al cliente web mapeando los datos gRPC a JSON
+	// 	c.JSON(http.StatusOK, gin.H{
+	// 		"id":    grpcRes.GetId(),
+	// 		"name":  grpcRes.GetName(),
+	// 		"email": grpcRes.GetEmail(),
+	// 	})
+	// })
+
+	// log.Println("API HTTP Gateway corriendo en el puerto :8081")
+	// if err := r.Run(":8081"); err != nil {
+	// 	log.Fatalf("No se pudo encender el servidor Gin: %v", err)
+	// }
+
+	//////////////////////////////////////////////////////////
+
+	// 2. Iniciar la llamada de tipo Server Streaming
+	log.Println("Iniciando solicitud de Server Streaming...")
+	stream, err := client.GetUsers(context.Background(), &proto.Empty{})
+	if err != nil {
+		log.Fatalf("Error al solicitar el stream: %v", err)
+	}
+
+	// 3. Escuchar de forma continua las respuestas enviadas por el servidor
+	for {
+		// .Recv() bloquea el hilo hasta que llegue el próximo mensaje del servidor
+		res, err := stream.Recv()
+
+		// Si el error es io.EOF, significa que el servidor cerró el stream de forma exitosa
+		if err == io.EOF {
+			log.Println("¡Stream completado! El servidor ha terminado de enviar todos los datos.")
+			break
 		}
 
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
-		defer cancel()
-
-		grpcReq := &proto.UserRequest{
-			Id: int32(idInt), // Convertimos al tipo de dato que espera tu proto
-		}
-
-		// 4. Realizar la llamada interna por gRPC al microservicio
-		grpcRes, err := client.GetUser(ctx, grpcReq)
+		// Si ocurre cualquier otro error, se interrumpe la lectura
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error":   "No se pudo obtener el usuario desde el servicio interno",
-				"details": err.Error(),
-			})
-			return
+			log.Fatalf("Error leyendo del stream de datos: %v", err)
 		}
 
-		// 5. Responder al cliente web mapeando los datos gRPC a JSON
-		c.JSON(http.StatusOK, gin.H{
-			"id":    grpcRes.GetId(),
-			"name":  grpcRes.GetName(),
-			"email": grpcRes.GetEmail(),
-		})
-	})
-
-	log.Println("API HTTP Gateway corriendo en el puerto :8081")
-	if err := r.Run(":8081"); err != nil {
-		log.Fatalf("No se pudo encender el servidor Gin: %v", err)
+		// Procesar el mensaje recibido en tiempo real
+		log.Printf("[Stream Recibido] ID: %d | Nombre: %s | Email: %s",
+			res.GetId(),
+			res.GetName(),
+			res.GetEmail(),
+		)
 	}
 
 	// // Definimos la ruta HTTP que usará el usuario final

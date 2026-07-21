@@ -8,6 +8,9 @@ service UserService {
 
   rpc GetUser(UserRequest)
       returns (UserResponse);
+  
+  rpc GetUsers(Empty)
+    returns (stream UserResponse);
 }
 
 message UserRequest {
@@ -23,3 +26,5 @@ message UserResponse {
 
   string email = 3;
 }
+
+message Empty {}
