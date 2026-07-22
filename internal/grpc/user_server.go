@@ -42,8 +42,36 @@ func (s *Server) GetUser(ctx context.Context, req *proto.UserRequest) (*proto.Us
 		// Si no se encuentra el usuario, enviamos un código NotFound de gRPC
 		return nil, status.Error(codes.NotFound, "usuario no encontrado en el sistema")
 	}
+	///////////////////Metadata/////////////////////////////
+	// 1. Extraer la metadata entrante del contexto
+	// md, exists := metadata.FromIncomingContext(ctx)
+	// if !exists {
+	// 	return nil, status.Error(codes.Unauthenticated, "No se proporcionó metadata")
+	// }
+	// // 2. Leer el campo "authorization" (gRPC convierte todas las llaves a MINÚSCULAS automáticamente)
+	// authHeader := md.Get("authorization")
+	// if len(authHeader) == 0 {
+	// 	return nil, status.Error(codes.Unauthenticated, "Token de autorización ausente")
+	// }
+	// // Extraer el token quitando el prefijo "Bearer "
+	// token := strings.TrimPrefix(authHeader[0], "Bearer ")
+	// log.Printf("[Servidor] Validando token recibido: %s", token)
+	// // Simulación de validación del token
+	// if token != "TOKEN" { // Aquí validarías con tu librería JWT usando cfg.JWTKey
+	// 	return nil, status.Error(codes.Unauthenticated, "Token inválido o expirado")
+	// }
+	// //// 3. RESPONDER CON METADATA AL CLIENTE (Headers de salida)
+	// headerResponse := metadata.Pairs(
+	// 	"x-server-version", "1.0.0",
+	// 	"x-request-processed", "true",
+	// )
+	// // Enviamos el header inmediatamente a través del contexto de gRPC
+	// if err := grpc.SendHeader(ctx, headerResponse); err != nil {
+	// 	return nil, status.Error(codes.Internal, "No se pudo enviar la metadata de respuesta")
+	// }
+	////////////////////////////////////////////////
 
-	// 3. Mapear el DTO obtenido del Caso de Uso hacia el UserResponse de Protobuf
+	//Mapear el DTO obtenido del Caso de Uso hacia el UserResponse de Protobuf
 	return &proto.UserResponse{
 		Id:    int32(userDTO.ID),
 		Name:  userDTO.Name,
@@ -54,35 +82,20 @@ func (s *Server) GetUser(ctx context.Context, req *proto.UserRequest) (*proto.Us
 func (s *Server) GetUsers(req *proto.Empty, stream proto.UserService_GetUsersServer) error {
 	log.Println("Cliente conectado solicitando streaming de usuarios...")
 
-	// 1. Simulación o llamada al caso de uso para obtener un listado de usuarios.
-	// En un entorno real, u.usecase.FindAll() traería esto de la base de datos.
-	usuariosSimulados := []struct {
-		ID    uint
-		Name  string
-		Email string
-	}{
-		{ID: 1, Name: "Juan Carlos", Email: "juan@gmail.com"},
-		{ID: 2, Name: "Maria Belen", Email: "maria@gmail.com"},
-		{ID: 3, Name: "Pedro Pascal", Email: "pedro@gmail.com"},
-	}
+	usuarios := s.usecase.FindAll()
 
-	// 2. Iterar sobre la lista y enviar cada usuario uno por uno a través del stream
-	for _, u := range usuariosSimulados {
-
-		// Comprobar si el cliente canceló la petición antes de enviar el siguiente dato
+	for _, u := range usuarios {
 		if err := stream.Context().Err(); err != nil {
 			log.Println("El cliente canceló la conexión del stream")
 			return status.Error(codes.Canceled, "Conexión cancelada por el cliente")
 		}
 
-		// Construir el mensaje de respuesta de Protobuf
 		res := &proto.UserResponse{
 			Id:    int32(u.ID),
 			Name:  u.Name,
 			Email: u.Email,
 		}
 
-		// Enviar el mensaje al canal (stream)
 		if err := stream.Send(res); err != nil {
 			log.Printf("Error al enviar usuario ID %d por el stream: %v", u.ID, err)
 			return status.Error(codes.Internal, "Fallo al transmitir datos")
@@ -90,11 +103,9 @@ func (s *Server) GetUsers(req *proto.Empty, stream proto.UserService_GetUsersSer
 
 		log.Printf("Usuario %s enviado con éxito", u.Name)
 
-		// Agregamos un pequeño delay artificial para notar el efecto de "streaming" en tiempo real
 		time.Sleep(1 * time.Second)
 	}
 
-	// 3. Retornar 'nil' le indica a gRPC que el servidor terminó de enviar todos los datos con éxito
 	log.Println("Streaming de usuarios finalizado correctamente")
 	return nil
 }

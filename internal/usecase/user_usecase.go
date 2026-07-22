@@ -10,6 +10,7 @@ import (
 type UserUseCaseInterface interface {
 	Create(req dto.CreateUserRequest) (dto.CreateUserResponse, error)
 	FindByID(id uint) (dto.UserResponse, error)
+	FindAll() []dto.UserResponse
 }
 
 type UserUseCase struct {
@@ -72,6 +73,25 @@ func (u *UserUseCase) FindByID(id uint) (dto.UserResponse, error) {
 	}
 
 	return response, nil
+}
+
+func (u *UserUseCase) FindAll() []dto.UserResponse {
+	users := u.repo.FindAll()
+	responses := make([]dto.UserResponse, 0, len(users))
+
+	for _, user := range users {
+		if user == nil {
+			continue
+		}
+
+		responses = append(responses, dto.UserResponse{
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
+		})
+	}
+
+	return responses
 }
 
 // Constructor

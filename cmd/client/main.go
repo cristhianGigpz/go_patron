@@ -21,22 +21,34 @@ func main() {
 
 	// 2. Crear el cliente utilizando el código generado por proto
 	client := proto.NewUserServiceClient(conn)
-	//////////////////////////////////////////////////////////
 
+	/////////////////////UNARY/////////////////////////////////////
+	//Metadatos - headers HTTP.//
+	// md := metadata.New(
+	// 	map[string]string{
+	// 		"authorization": "Bearer TOKEN",
+	// 	},
+	// )
+
+	// ctxWithMetadata := metadata.NewOutgoingContext(
+	// 	context.Background(),
+	// 	md,
+	// )
 	// // 3. Crear un contexto con tiempo límite (Timeout) para la petición (Buena práctica)
-	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	// ctx, cancel := context.WithTimeout(ctxWithMetadata, time.Second)
 	// defer cancel()
 
 	// // 4. Construir la petición (Request)
 	// req := &proto.UserRequest{
-	// 	Id: 4, // Enviamos el ID que queremos buscar
+	// 	Id: 7, // Enviamos el ID que queremos buscar
 	// }
 
 	// // 5. Ejecutar la llamada RPC al servidor //Consumir servicio:
-	// log.Println("Enviando petición gRPC al servidor...")
+	// log.Println("Enviando petición gRPC al servidor con metadata...")
 	// res, err := client.GetUser(ctx, req)
 	// if err != nil {
 	// 	log.Fatalf("Error al llamar a GetUser: %v", err)
+
 	// }
 
 	// // 6. Procesar y mostrar la respuesta del servidor //Resultado:
@@ -45,8 +57,7 @@ func main() {
 	// log.Printf("Nombre: %s", res.GetName())
 	// log.Printf("Email: %s", res.GetEmail())
 
-	//////////////////////////////////////////////////////////
-	// userHandler := handler.NewUserWebHandlerRpc(client)
+	/////////////////////UNARY CON GIN HTTP/////////////////////////////////////
 
 	// // 4. Configurar el servidor HTTP con Gin
 	// r := gin.Default()
@@ -89,7 +100,7 @@ func main() {
 	// 	log.Fatalf("No se pudo encender el servidor Gin: %v", err)
 	// }
 
-	//////////////////////////////////////////////////////////
+	/////////////////////SERVER STREAMING/////////////////////////////////////
 
 	// 2. Iniciar la llamada de tipo Server Streaming
 	log.Println("Iniciando solicitud de Server Streaming...")
@@ -122,6 +133,12 @@ func main() {
 		)
 	}
 
+	//////////////////////////////////////////////////////////
+
+	// userHandler := handler.NewUserWebHandlerRpc(client)
+	// // 4. Configurar el servidor HTTP con Gin
+	// r := gin.Default()
+
 	// // Definimos la ruta HTTP que usará el usuario final
 	// r.GET("/user/:id", userHandler.FindByID)
 
@@ -129,4 +146,7 @@ func main() {
 	// if err := r.Run(":8080"); err != nil {
 	// 	log.Fatalf("No se pudo encender el servidor Gin: %v", err)
 	// }
+
+	/////////////////////////////////////////////////////////
+	////Client Streaming y Bidirectional Streaming//////////
 }

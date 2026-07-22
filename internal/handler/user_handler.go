@@ -71,4 +71,9 @@ func (h *UserHandler) FindByID(c *gin.Context) {
 	c.JSON(http.StatusOK, userDTO)
 }
 
+func (h *UserHandler) FindAll(c *gin.Context) {
+	users := h.usecase.FindAll()
+	c.JSON(http.StatusOK, users)
+}
+
 //El Handler solo recibe datos y responde. Toda la lógica está en el Use Case.

@@ -23,6 +23,8 @@ type UserRepository interface {
 	Delete(
 		id uint,
 	) error
+
+	FindAll() []*entity.User
 }
 
 // Estructura: Es la implementación concreta de la interfaz.
@@ -49,6 +51,14 @@ func (r *userRepository) Update(user *entity.User) error {
 
 func (r *userRepository) Delete(id uint) error {
 	return r.db.Delete(&entity.User{}, id).Error
+}
+
+func (r *userRepository) FindAll() []*entity.User {
+	var users []*entity.User
+	if err := r.db.Find(&users).Error; err != nil {
+		return nil
+	}
+	return users
 }
 
 // Constructor
