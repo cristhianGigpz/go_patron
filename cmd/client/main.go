@@ -2,13 +2,14 @@ package main
 
 import (
 	"context"
-	"io"
 	"log"
+	"time"
 
 	"go-patron/proto" // Reemplaza "go-patron" por el nombre de tu módulo en go.mod
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 func main() {
@@ -24,38 +25,38 @@ func main() {
 
 	/////////////////////UNARY/////////////////////////////////////
 	//Metadatos - headers HTTP.//
-	// md := metadata.New(
-	// 	map[string]string{
-	// 		"authorization": "Bearer TOKEN",
-	// 	},
-	// )
+	md := metadata.New(
+		map[string]string{
+			"authorization": "Bearer TOKEN",
+		},
+	)
 
-	// ctxWithMetadata := metadata.NewOutgoingContext(
-	// 	context.Background(),
-	// 	md,
-	// )
-	// // 3. Crear un contexto con tiempo límite (Timeout) para la petición (Buena práctica)
-	// ctx, cancel := context.WithTimeout(ctxWithMetadata, time.Second)
-	// defer cancel()
+	ctxWithMetadata := metadata.NewOutgoingContext(
+		context.Background(),
+		md,
+	)
+	// 3. Crear un contexto con tiempo límite (Timeout) para la petición (Buena práctica)
+	ctx, cancel := context.WithTimeout(ctxWithMetadata, time.Second)
+	defer cancel()
 
-	// // 4. Construir la petición (Request)
-	// req := &proto.UserRequest{
-	// 	Id: 7, // Enviamos el ID que queremos buscar
-	// }
+	// 4. Construir la petición (Request)
+	req := &proto.UserRequest{
+		Id: 7, // Enviamos el ID que queremos buscar
+	}
 
-	// // 5. Ejecutar la llamada RPC al servidor //Consumir servicio:
-	// log.Println("Enviando petición gRPC al servidor con metadata...")
-	// res, err := client.GetUser(ctx, req)
-	// if err != nil {
-	// 	log.Fatalf("Error al llamar a GetUser: %v", err)
+	// 5. Ejecutar la llamada RPC al servidor //Consumir servicio:
+	log.Println("Enviando petición gRPC al servidor con metadata...")
+	res, err := client.GetUser(ctx, req)
+	if err != nil {
+		log.Fatalf("Error al llamar a GetUser: %v", err)
 
-	// }
+	}
 
-	// // 6. Procesar y mostrar la respuesta del servidor //Resultado:
-	// log.Printf("Respuesta recibida con éxito del Servidor:")
-	// log.Printf("ID: %d", res.GetId())
-	// log.Printf("Nombre: %s", res.GetName())
-	// log.Printf("Email: %s", res.GetEmail())
+	// 6. Procesar y mostrar la respuesta del servidor //Resultado:
+	log.Printf("Respuesta recibida con éxito del Servidor:")
+	log.Printf("ID: %d", res.GetId())
+	log.Printf("Nombre: %s", res.GetName())
+	log.Printf("Email: %s", res.GetEmail())
 
 	/////////////////////UNARY CON GIN HTTP/////////////////////////////////////
 
@@ -103,35 +104,35 @@ func main() {
 	/////////////////////SERVER STREAMING/////////////////////////////////////
 
 	// 2. Iniciar la llamada de tipo Server Streaming
-	log.Println("Iniciando solicitud de Server Streaming...")
-	stream, err := client.GetUsers(context.Background(), &proto.Empty{})
-	if err != nil {
-		log.Fatalf("Error al solicitar el stream: %v", err)
-	}
+	// log.Println("Iniciando solicitud de Server Streaming...")
+	// stream, err := client.GetUsers(context.Background(), &proto.Empty{})
+	// if err != nil {
+	// 	log.Fatalf("Error al solicitar el stream: %v", err)
+	// }
 
-	// 3. Escuchar de forma continua las respuestas enviadas por el servidor
-	for {
-		// .Recv() bloquea el hilo hasta que llegue el próximo mensaje del servidor
-		res, err := stream.Recv()
+	// // 3. Escuchar de forma continua las respuestas enviadas por el servidor
+	// for {
+	// 	// .Recv() bloquea el hilo hasta que llegue el próximo mensaje del servidor
+	// 	res, err := stream.Recv()
 
-		// Si el error es io.EOF, significa que el servidor cerró el stream de forma exitosa
-		if err == io.EOF {
-			log.Println("¡Stream completado! El servidor ha terminado de enviar todos los datos.")
-			break
-		}
+	// 	// Si el error es io.EOF, significa que el servidor cerró el stream de forma exitosa
+	// 	if err == io.EOF {
+	// 		log.Println("¡Stream completado! El servidor ha terminado de enviar todos los datos.")
+	// 		break
+	// 	}
 
-		// Si ocurre cualquier otro error, se interrumpe la lectura
-		if err != nil {
-			log.Fatalf("Error leyendo del stream de datos: %v", err)
-		}
+	// 	// Si ocurre cualquier otro error, se interrumpe la lectura
+	// 	if err != nil {
+	// 		log.Fatalf("Error leyendo del stream de datos: %v", err)
+	// 	}
 
-		// Procesar el mensaje recibido en tiempo real
-		log.Printf("[Stream Recibido] ID: %d | Nombre: %s | Email: %s",
-			res.GetId(),
-			res.GetName(),
-			res.GetEmail(),
-		)
-	}
+	// 	// Procesar el mensaje recibido en tiempo real
+	// 	log.Printf("[Stream Recibido] ID: %d | Nombre: %s | Email: %s",
+	// 		res.GetId(),
+	// 		res.GetName(),
+	// 		res.GetEmail(),
+	// 	)
+	// }
 
 	//////////////////////////////////////////////////////////
 

@@ -51,7 +51,10 @@ func main() {
 		log.Fatalf("Fallo al escuchar en puerto 50051: %v", err)
 	}
 	// 5. Configurar y encender el servidor gRPC nativo
-	server := grpc.NewServer()
+
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_server.AuthUnaryInterceptor),
+	)
 	// Registramos nuestro servicio inyectado
 	proto.RegisterUserServiceServer(server, grpcUserService)
 
@@ -93,4 +96,22 @@ func main() {
 	//              │
 	//              ▼
 	//    PostgreSQL / Redis
+
+	/////////////////gRPC/////////////////////////
+	// 	Cliente
+	//    │
+	//    ▼
+	// Stub generado por Protobuf
+	//    │
+	//    ▼
+	// HTTP/2 + Protobuf
+	//    │
+	//    ▼
+	// Servidor gRPC
+	//    │
+	//    ▼
+	// Servicio
+	//    │
+	//    ▼
+	// Base de Datos
 }

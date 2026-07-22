@@ -42,34 +42,6 @@ func (s *Server) GetUser(ctx context.Context, req *proto.UserRequest) (*proto.Us
 		// Si no se encuentra el usuario, enviamos un código NotFound de gRPC
 		return nil, status.Error(codes.NotFound, "usuario no encontrado en el sistema")
 	}
-	///////////////////Metadata/////////////////////////////
-	// 1. Extraer la metadata entrante del contexto
-	// md, exists := metadata.FromIncomingContext(ctx)
-	// if !exists {
-	// 	return nil, status.Error(codes.Unauthenticated, "No se proporcionó metadata")
-	// }
-	// // 2. Leer el campo "authorization" (gRPC convierte todas las llaves a MINÚSCULAS automáticamente)
-	// authHeader := md.Get("authorization")
-	// if len(authHeader) == 0 {
-	// 	return nil, status.Error(codes.Unauthenticated, "Token de autorización ausente")
-	// }
-	// // Extraer el token quitando el prefijo "Bearer "
-	// token := strings.TrimPrefix(authHeader[0], "Bearer ")
-	// log.Printf("[Servidor] Validando token recibido: %s", token)
-	// // Simulación de validación del token
-	// if token != "TOKEN" { // Aquí validarías con tu librería JWT usando cfg.JWTKey
-	// 	return nil, status.Error(codes.Unauthenticated, "Token inválido o expirado")
-	// }
-	// //// 3. RESPONDER CON METADATA AL CLIENTE (Headers de salida)
-	// headerResponse := metadata.Pairs(
-	// 	"x-server-version", "1.0.0",
-	// 	"x-request-processed", "true",
-	// )
-	// // Enviamos el header inmediatamente a través del contexto de gRPC
-	// if err := grpc.SendHeader(ctx, headerResponse); err != nil {
-	// 	return nil, status.Error(codes.Internal, "No se pudo enviar la metadata de respuesta")
-	// }
-	////////////////////////////////////////////////
 
 	//Mapear el DTO obtenido del Caso de Uso hacia el UserResponse de Protobuf
 	return &proto.UserResponse{
