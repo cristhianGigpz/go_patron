@@ -3,16 +3,12 @@ package main
 import (
 	"fmt"
 	"go-patron/internal/config"
-	grpc_server "go-patron/internal/grpc"
 	"go-patron/internal/handler"
 	"go-patron/internal/repository"
 	"go-patron/internal/usecase"
-	"go-patron/proto"
 	"log"
-	"net"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -34,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("No se pudo conectar a la base de datos: %v", err)
 	}
+
 	r := gin.Default()
 	// 2. Inyección de Dependencias (Tu código)
 	// Pasamos 'db' al repositorio
@@ -43,25 +40,27 @@ func main() {
 	// Pasamos 'repo' al caso de uso
 	//userUseCase := usecase.NewUserUseCase(&repo)
 	userUseCase := usecase.NewUserUseCase(repo)
-	// Inyectamos el caso de uso en nuestro servidor gRPC///
-	grpcUserService := grpc_server.NewUserGRPCServer(userUseCase)
-	// 4. Iniciar la escucha en el puerto de red
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("Fallo al escuchar en puerto 50051: %v", err)
-	}
-	// 5. Configurar y encender el servidor gRPC nativo
 
-	server := grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_server.AuthUnaryInterceptor),
-	)
-	// Registramos nuestro servicio inyectado
-	proto.RegisterUserServiceServer(server, grpcUserService)
+	// // Inyectamos el caso de uso en nuestro servidor gRPC///
+	// grpcUserService := grpc_server.NewUserGRPCServer(userUseCase)
+	// // 4. Iniciar la escucha en el puerto de red
+	// lis, err := net.Listen("tcp", ":50051")
+	// if err != nil {
+	// 	log.Fatalf("Fallo al escuchar en puerto 50051: %v", err)
+	// }
+	// // 5. Configurar y encender el servidor gRPC nativo
 
-	log.Println("Microservicio gRPC corriendo en el puerto :50051 con acceso real a Base de Datos")
-	if err := server.Serve(lis); err != nil {
-		log.Fatalf("Error al levantar el servidor gRPC: %v", err)
-	}
+	// server := grpc.NewServer(
+	// 	grpc.UnaryInterceptor(grpc_server.AuthUnaryInterceptor),
+	// )
+	// // Registramos nuestro servicio inyectado
+	// proto.RegisterUserServiceServer(server, grpcUserService)
+
+	// log.Println("Microservicio gRPC corriendo en el puerto :50051 con acceso real a Base de Datos")
+	// if err := server.Serve(lis); err != nil {
+	// 	log.Fatalf("Error al levantar el servidor gRPC: %v", err)
+	// }
+	/////////////////////////////////////////////////////////////////////
 
 	// Pasamos 'userUseCase' al manejador
 	handler := handler.NewUserHandler(userUseCase)
@@ -71,6 +70,10 @@ func main() {
 
 	r.GET("/user/:id", func(c *gin.Context) {
 		handler.FindByID(c)
+	})
+
+	r.GET("/users", func(c *gin.Context) {
+		handler.FindAll(c)
 	})
 
 	r.POST("/user", func(c *gin.Context) {
