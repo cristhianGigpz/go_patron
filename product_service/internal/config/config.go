@@ -14,6 +14,7 @@ type Config struct {
 	DBPassword string
 	BDName     string
 	APIPort    string
+	GRPCPort   string
 }
 
 func LoadConfig() *Config {
@@ -28,6 +29,7 @@ func LoadConfig() *Config {
 		DBPassword: getEnv("DB_PASSWORD", "password"),
 		BDName:     getEnv("BD_NAME", "bd_product_service"),
 		APIPort:    getEnv("API_PORT", "8081"),
+		GRPCPort:   getEnv("GRPC_PORT", "50052"),
 	}
 }
 

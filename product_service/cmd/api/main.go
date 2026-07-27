@@ -3,13 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"product-service/internal/config"
 	"product-service/internal/entity"
+	grpc_server "product-service/internal/grpc"
 	"product-service/internal/handler"
 	"product-service/internal/repository"
 	"product-service/internal/usecase"
+	productpb "product-service/proto"
 
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -32,6 +36,22 @@ func main() {
 	productUseCase := usecase.NewProductUseCase(productRepo)
 	productHandler := handler.NewProductHandler(productUseCase)
 
+	// Inicializar el servidor gRPC usando el mismo caso de uso que la API REST.
+	lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
+	if err != nil {
+		log.Fatalf("No se pudo abrir el puerto gRPC: %v", err)
+	}
+	grpcServer := grpc.NewServer()
+	productGRPCServer := grpc_server.NewProductGRPCServer(productUseCase)
+	productpb.RegisterProductServiceServer(grpcServer, productGRPCServer)
+
+	go func() {
+		log.Printf("ProductService gRPC ejecutándose en :%s", cfg.GRPCPort)
+		if err := grpcServer.Serve(lis); err != nil {
+			log.Printf("Error en el servidor gRPC: %v", err)
+		}
+	}()
+
 	r := gin.Default()
 	r.GET("/products", productHandler.FindAll)
 	r.GET("/product/:id", productHandler.FindByID)
@@ -44,3 +64,5 @@ func main() {
 		log.Fatal(err)
 	}
 }
+
+//protoc --go_out=. --go-grpc_out=. user.proto
