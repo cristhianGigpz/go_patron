@@ -42,9 +42,9 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	getUser(ctx, userClient, 1)
+	getUser(ctx, userClient, 2)
 	//getUsers(ctx, userClient)
-	getProduct(ctx, productClient, 1)
+	getProduct(ctx, productClient, 5)
 	//getProducts(ctx, productClient)
 }
 
