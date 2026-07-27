@@ -120,4 +120,26 @@ func main() {
 	//    │
 	//    ▼
 	// Base de Datos
+
+	//                     Cliente
+	//                        │
+	//                        ▼
+	//                  API Gateway
+	//                        │
+	//       ┌──────────┬──────────┬──────────┐
+	//       │          │          │          │
+	//       ▼          ▼          ▼          ▼
+	//  User Service Product   Order     Payment
+	//    :8001      Service   Service    Service
+	//                :8002     :8003      :8004
+	//       │          │          │          │
+	//       ▼          ▼          ▼          ▼
+	//  PostgreSQL PostgreSQL PostgreSQL PostgreSQL
+	//                        │
+	//                        ▼
+	//              Notification Service
+	//                      :8005
+	//                        │
+	//                        ▼
+	//                  Email / SMS
 }
